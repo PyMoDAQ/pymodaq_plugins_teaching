@@ -31,10 +31,9 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
     # TODO add your particular attributes here if any
 
     """
-    is_multiaxes = False  # TODO for your plugin set to True if this plugin is controlled for a multiaxis controller
-    _axis_names: Union[List[str], Dict[str, int]] = ['Axis1', 'Axis2']  # TODO for your plugin: complete the list
-    _controller_units: Union[str, List[str]] = 'mm'  # TODO for your plugin: put the correct unit here, it could be
-    # TODO  a single str (the same one is applied to all axes) or a list of str (as much as the number of axes)
+    is_multiaxes = False
+    _axis_names: Union[List[str], Dict[str, int]] = ['']
+    _controller_units: Union[str, List[str]] = 'nm'
     _epsilon: Union[float, List[float]] = 0.1  # TODO replace this by a value that is correct depending on your controller
     # TODO it could be a single float of a list of float (as much as the number of axes)
     data_actuator_type = DataActuatorType.DataActuator  # wether you use the new data style for actuator otherwise set this
@@ -48,7 +47,7 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
     def ini_attributes(self):
         #  TODO declare the type of the wrapper (and assign it to self.controller) you're going to use for easy
         #  autocompletion
-        self.controller: PythonWrapperObjectOfYourInstrument = None
+        self.controller: Spectrometer = None
 
         #TODO declare here attributes you want/need to init with a default value
         pass
@@ -61,8 +60,7 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
         float: The position obtained after scaling conversion.
         """
         ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
-        pos = DataActuator(data=self.controller.your_method_to_get_the_actuator_value(),  # when writing your own plugin replace this line
+        pos = DataActuator(data=self.controller.get_wavelength(),  # when writing your own plugin replace this line
                            units=self.axis_unit)
         pos = self.get_position_with_scaling(pos)
         return pos
@@ -123,10 +121,9 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
         initialized: bool
             False if initialization failed otherwise True
         """
-        raise NotImplementedError  # TODO when writing your own plugin remove this line and modify the ones below
         if self.is_master:  # is needed when controller is master
-            self.controller = PythonWrapperObjectOfYourInstrument(arg1, arg2, ...) #  arguments for instantiation!)
-            initialized = self.controller.a_method_or_atttribute_to_check_if_init()  # todo
+            self.controller = Spectrometer()
+            initialized = self.controller.open_communication()  # todo
             # todo: enter here whatever is needed for your controller initialization and eventual
             #  opening of the communication channel
         else:
