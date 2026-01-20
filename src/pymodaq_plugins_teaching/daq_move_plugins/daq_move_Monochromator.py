@@ -87,9 +87,8 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
     def close(self):
         """Terminate the communication protocol"""
         ## TODO for your custom plugin
-        raise NotImplementedError  # when writing your own plugin remove this line
         if self.is_master:
-            #  self.controller.your_method_to_terminate_the_communication()  # when writing your own plugin replace this line
+            self.controller.close_communication()  # when writing your own plugin replace this line
             ...
 
     def commit_settings(self, param: Parameter):
