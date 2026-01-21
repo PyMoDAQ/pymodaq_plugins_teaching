@@ -38,8 +38,10 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
     data_actuator_type = DataActuatorType.DataActuator  # wether you use the new data style for actuator otherwise set this
     # as  DataActuatorType.float  (or entirely remove the line)
 
-    params = [   # TODO for your custom plugin: elements to be added here as dicts in order to control your custom stage
-                ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
+    params = [{'title': 'Tau (ms)', 'name': 'tau', 'type': 'float', 'value': 1234.,
+                  'suffix': 'ms', 'visible': True, 'readonly': False},
+
+              ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
     # _epsilon is the initial default value for the epsilon parameter allowing pymodaq to know if the controller reached
     # the target value. It is the developer responsibility to put here a meaningful value
 
@@ -91,14 +93,8 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
             A given parameter (within detector_settings) whose value has been changed by the user
         """
         ## TODO for your custom plugin
-        if param.name() == 'axis':
-            self.axis_unit = self.controller.your_method_to_get_correct_axis_unit()
-            # do this only if you can and if the units are not known beforehand, for instance
-            # if the motors connected to the controller are of different type (mm, µm, nm, , etc...)
-            # see BrushlessDCMotor from the thorlabs plugin for an exemple
-
-        elif param.name() == "a_parameter_you've_added_in_self.params":
-           self.controller.your_method_to_apply_this_param_change()
+        if param.name() == 'tau':
+           self.controller.tau = param.value() / 1000
         else:
             pass
 
@@ -119,11 +115,12 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
         if self.is_master:  # is needed when controller is master
             self.controller = Spectrometer()
             initialized = self.controller.open_communication()  # todo
-            # todo: enter here whatever is needed for your controller initialization and eventual
-            #  opening of the communication channel
         else:
             self.controller = controller
             initialized = True
+
+        if initialized:
+            self.settings.child('tau').setValue(self.controller.tau * 1000)
 
         info = "Whatever info you want to log"
         return info, initialized
@@ -164,4 +161,4 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
         self.controller.stop()
 
 if __name__ == '__main__':
-    main(__file__)
+    main(__file__, init=False)
