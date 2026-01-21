@@ -45,7 +45,9 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
 
     params = [
                  {'Title':'Tau (ms)', 'name':'tau', 'type':'float','value':1234.,
-                  'suffix':'ms','visible':True,'readonly':False}
+                  'suffix':'ms','visible':True,'readonly':False},
+                 {'Title':'Grating', 'name':'grating', 'type':'list','limits':['G300','G1200'],
+                  'value':Spectrometer.gratings,'visible':True,'readonly':False},
                  # TODO for your custom plugin: elements to be added here as dicts in order to control your custom stage
                 ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
     # _epsilon is the initial default value for the epsilon parameter allowing pymodaq to know if the controller reached
@@ -103,14 +105,8 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
             A given parameter (within detector_settings) whose value has been changed by the user
         """
         ## TODO for your custom plugin
-        if param.name() == 'axis':
-            self.axis_unit = self.controller.your_method_to_get_correct_axis_unit()
-            # do this only if you can and if the units are not known beforehand, for instance
-            # if the motors connected to the controller are of different type (mm, µm, nm, , etc...)
-            # see BrushlessDCMotor from the thorlabs plugin for an exemple
-
-        elif param.name() == "a_parameter_you've_added_in_self.params":
-           self.controller.your_method_to_apply_this_param_change()
+        if param.name() == 'tau':
+            self.controller.tau = param.value()/1000
         else:
             pass
 
@@ -135,9 +131,16 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
                           # a_method_or_atttribute_to_check_if_init())  todo
             # todo: enter here whatever is needed for your controller initialization and eventual
             #  opening of the communication channel
+            #self.controller.tau
+
+            self.settings.child('tau').setValue(self.controller.tau*1000)
+
+
         else:
             self.controller = controller
             initialized = True
+
+
 
         info = "Whatever info you want to log"
         return info, initialized
