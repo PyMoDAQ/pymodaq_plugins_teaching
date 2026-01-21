@@ -46,8 +46,8 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
     params = [
                  {'Title':'Tau (ms)', 'name':'tau', 'type':'float','value':1234.,
                   'suffix':'ms','visible':True,'readonly':False},
-                 {'Title':'Grating', 'name':'grating', 'type':'list','limits':['G300','G1200'],
-                  'value':Spectrometer.gratings,'visible':True,'readonly':False},
+                 {'Title':'Grating', 'name':'grating', 'type':'list','limits':Spectrometer.gratings,
+                  'value':Spectrometer.gratings[0],'visible':True,'readonly':False},
                  # TODO for your custom plugin: elements to be added here as dicts in order to control your custom stage
                 ] + comon_parameters_fun(is_multiaxes, axis_names=_axis_names, epsilon=_epsilon)
     # _epsilon is the initial default value for the epsilon parameter allowing pymodaq to know if the controller reached
@@ -107,6 +107,10 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
         ## TODO for your custom plugin
         if param.name() == 'tau':
             self.controller.tau = param.value()/1000
+
+        elif param.name() == 'grating':
+            self.controller.grating = param.value()
+
         else:
             pass
 
@@ -133,12 +137,17 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
             #  opening of the communication channel
             #self.controller.tau
 
-            self.settings.child('tau').setValue(self.controller.tau*1000)
+
 
 
         else:
             self.controller = controller
             initialized = True
+
+        if initialized:
+            self.settings.child('tau').setValue(self.controller.tau * 1000)
+            self.settings.child('grating').setLimits(self.controller.gratings)
+            self.settings.child('grating').setValue(self.controller.grating)
 
 
 
