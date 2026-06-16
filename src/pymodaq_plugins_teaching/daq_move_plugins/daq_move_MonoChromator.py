@@ -19,7 +19,7 @@ from pymodaq_plugins_template.hardware.python_wrapper_file_of_your_instrument im
 #     pymodaq_plugins_my_plugin/daq_move_plugins
 
 
-class DAQ_Move_Monochromator(DAQ_Move_base):
+class DAQ_Move_MonoChromator(DAQ_Move_base):
     """ Instrument plugin class for an actuator.
     
     This object inherits all functionalities to communicate with PyMoDAQ’s DAQ_Move module through inheritance via
