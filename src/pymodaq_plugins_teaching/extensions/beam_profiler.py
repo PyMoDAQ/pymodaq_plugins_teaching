@@ -14,7 +14,7 @@ from pymodaq_data.data import DataToExport
 from pymodaq.utils.custom_ext import CustomExt
 from pymodaq.utils.managers.modules import ModuleType
 
-from pymodaq_plugins_teaching.beam import beam_properties
+from pymodaq_plugins_teaching.hardware.beam import beam_properties
 
 logger = set_logger(get_module_name(__file__))
 

@@ -10,7 +10,7 @@ from pymodaq.control_modules.enums import DAQTypesEnum
 from pymodaq_data.data import DataRaw, DataToExport, Axis
 from pymodaq_gui import utils as gutils
 
-from pymodaq_plugins_teaching.beam import beam_properties, gaussian_beam_image
+from pymodaq_plugins_teaching.hardware.beam import beam_properties, gaussian_beam_image
 from pymodaq_plugins_teaching.daq_viewer_plugins.plugins_2D.daq_2Dviewer_BeamProfiler import \
     DAQ_2DViewer_BeamProfiler
 from pymodaq_plugins_teaching.extensions.beam_profiler import BeamProfiler

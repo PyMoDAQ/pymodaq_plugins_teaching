@@ -11,7 +11,7 @@ from pymodaq_gui.plotting.data_viewers.viewer2D import Viewer2D
 from pymodaq_gui.utils.widgets.lcd import LCD
 from pymodaq_data.data import DataRaw, Axis
 
-from pymodaq_plugins_teaching.beam import beam_properties, gaussian_beam_image
+from pymodaq_plugins_teaching.hardware.beam import beam_properties, gaussian_beam_image
 
 
 class BeamProfilerApp(gutils.CustomApp):

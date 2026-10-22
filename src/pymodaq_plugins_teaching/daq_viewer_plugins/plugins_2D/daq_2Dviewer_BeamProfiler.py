@@ -5,7 +5,7 @@ from pymodaq_data.data import DataCalculated
 
 from pymodaq_plugins_mockexamples.daq_viewer_plugins.plugins_2D.daq_2Dviewer_BSCamera import DAQ_2DViewer_BSCamera
 
-from pymodaq_plugins_teaching.beam import beam_properties
+from pymodaq_plugins_teaching.hardware.beam import beam_properties
 
 
 class DAQ_2DViewer_BeamProfiler(DAQ_2DViewer_BSCamera):
