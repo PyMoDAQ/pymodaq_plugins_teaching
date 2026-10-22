@@ -12,6 +12,7 @@ from pymodaq_gui.utils.widgets.lcd import LCD
 from pymodaq_utils.logger import set_logger, get_module_name
 from pymodaq_data.data import DataToExport
 from pymodaq.utils.custom_ext import CustomExt
+from pymodaq.utils.managers.modules import ModuleType
 
 from pymodaq_plugins_teaching.beam import beam_properties
 
@@ -30,8 +31,8 @@ class BeamProfiler(CustomExt):
 
     def __init__(self, parent: gutils.DockArea, dashboard):
         super().__init__(parent, dashboard, add_toolbar_break=False)
-        self._timer = QtCore.QTimer()
-        self._timer.timeout.connect(self.grab)
+        self._live = False
+        self._grabbing = False
         self.setup_ui()
 
     def setup_docks_and_widgets(self):
@@ -71,17 +72,32 @@ class BeamProfiler(CustomExt):
             self.modules_manager.selected_detectors_name = [param.value()]
 
     def grab(self):
-        """Ask the selected camera for an image through the modules manager, then analyse it"""
+        """Ask the selected camera for an image through the modules manager (asynchronous grab)
+
+        The Dashboard stays responsive: `_on_data_grabbed` is called when the data of the camera are there.
+        """
+        if self._grabbing:
+            return
         if not self.modules_manager.selected_detectors_name:
             self.update_status('Select a camera in the settings')
             return
-        self.show_data(self.modules_manager.grab_data())
+        self._grabbing = True
+        self.modules_manager.grab_data_with_callback(callback=self._on_data_grabbed)
+
+    def _on_data_grabbed(self, dte: DataToExport):
+        """Callback of the asynchronous grab: forget it (it is connected again at each grab), show the data and, in
+        live mode, plan the next grab"""
+        self.modules_manager.forget_callback(self._on_data_grabbed, module_type=ModuleType.Detector,
+                                             disconnect_modules=True)
+        self._grabbing = False
+        self.show_data(dte)
+        if self._live:
+            QtCore.QTimer.singleShot(self.settings['refresh'], self.grab)
 
     def set_live(self, do_live: bool):
+        self._live = do_live
         if do_live:
-            self._timer.start(self.settings['refresh'])
-        else:
-            self._timer.stop()
+            self.grab()
 
     def show_data(self, dte: DataToExport):
         """Display the first raw 2D data of the received data and the properties of the beam"""
@@ -96,7 +112,7 @@ class BeamProfiler(CustomExt):
         self.lcd.setvalues([np.array([val]) for val in (x, y, d_major, d_minor, np.rad2deg(phi))])
 
     def _quit_fun(self) -> bool:
-        self._timer.stop()
+        self._live = False
         return True
 
 

@@ -1,8 +1,12 @@
 """Tests of the beam profiler of the module B: analysis function, 2D plugin, standalone app and Dashboard extension"""
+import time
+
 import numpy as np
 import pytest
+from qtpy import QtWidgets
 
 from pymodaq.utils.plugin_testing import make_detector, grab_and_wait, loaded_extension, PluginExtensionChecks
+from pymodaq.control_modules.enums import DAQTypesEnum
 from pymodaq_data.data import DataRaw, DataToExport, Axis
 from pymodaq_gui import utils as gutils
 
@@ -64,3 +68,49 @@ def test_app_simulates_and_analyses(qapp):
     app.simulate()
     app.settings.child('size_x').setValue(60.)  # triggers value_changed, then a new simulation
     dockarea.close()
+
+
+def _wait_for(condition, timeout=10.):
+    t0 = time.perf_counter()
+    while not condition() and time.perf_counter() - t0 < timeout:
+        QtWidgets.QApplication.processEvents()
+        time.sleep(0.01)
+    return condition()
+
+
+@pytest.fixture
+def extension_with_camera(qapp):
+    """The extension loaded in a Dashboard holding the BeamProfiler camera, initialized (no visible GUI)"""
+    with loaded_extension(BeamProfiler) as (dashboard, extension):
+        camera = dashboard.add_det('Camera', DAQTypesEnum.DAQ2D, 'BeamProfiler')
+        camera.init_hardware_ui(True)
+        assert _wait_for(lambda: camera.initialized_state)
+        extension.modules_manager.add_modules([camera])
+        extension.settings.child('camera').setLimits(extension.modules_manager.detectors_name)
+        extension.settings.child('camera').setValue('Camera')
+        assert extension.modules_manager.selected_detectors_name == ['Camera']
+        shown = []
+        extension.lcd.setvalues = lambda values, **kwargs: shown.append(values)
+        yield extension, shown
+        extension.set_live(False)
+        camera.quit_fun()
+
+
+def test_extension_grabs_asynchronously_through_the_modules_manager(extension_with_camera):
+    extension, shown = extension_with_camera
+    extension.grab()
+    assert _wait_for(lambda: len(shown) == 1)
+    d_major, d_minor = shown[0][2][0], shown[0][3][0]
+    assert d_major >= d_minor > 0
+    assert not extension._grabbing  # the grab is finished and its callback forgotten
+
+
+def test_extension_live_mode_chains_the_grabs(extension_with_camera):
+    extension, shown = extension_with_camera
+    extension.settings.child('refresh').setValue(20)
+    extension.set_live(True)
+    assert _wait_for(lambda: len(shown) >= 3)
+    extension.set_live(False)
+    n_after_stop = len(shown)
+    _wait_for(lambda: False, timeout=0.3)
+    assert len(shown) <= n_after_stop + 1  # at most the grab that was already running
