@@ -19,6 +19,15 @@ PyMoDAQ Plugins Teaching
 PyMoDAQ plugins developed specifically to teach how to create new plugins
 
 
+Branches
+========
+
+* ``main``: the skeleton of ``pymodaq_plugins_template`` (plugins to complete) and the wrappers of the ``hardware`` folder
+  that the trainees use. This is the starting point of the exercises.
+* ``correction-module-a``: the solution of the module A (``DAQ_Move_Monochromator``,
+  ``DAQ_0DViewer_PhotodiodeMonochromator``, ``DAQ_1DViewer_Spectrometer``).
+* ``correction-module-b``: the solution of the modules A and B (adds the beam profiler plugin, app and extension).
+
 Authors
 =======
 
