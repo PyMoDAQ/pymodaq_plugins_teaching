@@ -1,5 +1,5 @@
 [features]  # defines the plugin features contained into this plugin
-instruments = false  # no instrument plugin yet, set to true when added
+instruments = true  # contains instrument plugins
 extensions = false  # true if plugins contains dashboard extensions
 models = false  # true if plugins contains models of the extensions (PID, optimizers, data mixer, sequencer, ...)
 h5exporters = false  # true if plugin contains custom h5 file exporters

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from pymodaq.utils.math_utils import gauss1D
+from pymodaq_utils.math_utils import gauss1D
 from typing import List, Union
 from collections.abc import Iterable
 from numbers import Number
@@ -134,6 +134,11 @@ class Spectrometer:
             self._alpha = math.fabs(math.log(self._espilon / 10))
         self._start_time = perf_counter()
         self._moving = True
+
+    @property
+    def target_wavelength(self):
+        """Get the central wavelength the grating is moving to (or has reached)"""
+        return self._target_lambda
 
     def get_wavelength(self):
         """Get the current central wavelength in the spectrometer"""

@@ -31,20 +31,20 @@ Below is the list of instruments included in this plugin
 Actuators
 +++++++++
 
-* None yet
+* **Monochromator**: central wavelength of the simulated monochromator of the teaching spectrometer
 
 
 
 Viewer0D
 ++++++++
 
-* None yet
+* **PhotodiodeMonochromator**: intensity of the simulated spectrum at the central wavelength of the monochromator
 
 
 Viewer1D
 ++++++++
 
-* None yet
+* **Spectrometer**: simulated spectrum on the wavelength axis of the monochromator (master/slave with the actuator)
 
 
 Viewer2D
