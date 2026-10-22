@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from pymodaq.utils.math_utils import gauss1D
+from pymodaq_utils.math_utils import gauss1D
 from typing import List, Union
 from collections.abc import Iterable
 from numbers import Number
@@ -9,12 +9,21 @@ import math
 from time import perf_counter
 
 
+class NotReferencedError(RuntimeError):
+    """Raised by the spectrometer when it is asked something while its grating is being referenced (homing)"""
+
+
 class Spectrometer:
     """Mock Controller of a spectrometer
 
     Allows to change the used grating, to move the grating by setting the central wavelength and get the data out of it
+
+    As on many real instruments, the grating position is unknown while it is being referenced (`find_reference`):
+    the position, the movements and the data raise a `NotReferencedError` until `is_referenced` is True again.
     """
     gratings = ['G300', 'G1200']
+    reference_wavelength = 600.  # nm, position of the reference (limit) of the grating
+    homing_time = 1.5  # s, duration of the referencing
 
     Nx = 256
     infos = 'Spectrometer Controller Wrapper 0.1.0'
@@ -38,6 +47,8 @@ class Spectrometer:
         self._target_lambda = self._lambda
 
         self._lambda0 = 528
+
+        self._homing_start = None  # time at which the referencing started, None if not referencing
 
     def open_communication(self):
         return True
@@ -114,12 +125,31 @@ class Spectrometer:
         if value > 0.:
             self._wh = value
 
+    @property
+    def is_referenced(self) -> bool:
+        """False while the grating is being referenced (`find_reference` started and not yet finished)"""
+        if self._homing_start is not None and perf_counter() - self._homing_start >= self.homing_time:
+            self._homing_start = None
+            self._moving = False
+            self._lambda = self._target_lambda = self.reference_wavelength
+        return self._homing_start is None
+
+    def _check_referenced(self):
+        if not self.is_referenced:
+            raise NotReferencedError('The spectrometer is being referenced, its position is not available yet')
+
     def find_reference(self):
-        """Simulate the moving of the grating into a known "limit" for absolute positioning"""
-        self.set_wavelength(600, 'abs')
+        """Start the referencing of the grating on its limit, for absolute positioning (non blocking)
+
+        The referencing takes `homing_time`. Until it ends, `is_referenced` is False and the other methods
+        raise a `NotReferencedError`: poll `get_wavelength` (or `is_referenced`) to know when it is finished.
+        """
+        self._moving = False
+        self._homing_start = perf_counter()
 
     def set_wavelength(self, value, set_type='abs'):
         """Move the grating to set the central wavelength out of the spectrometer"""
+        self._check_referenced()
         if set_type == 'abs' and value < 0:
             raise ValueError('Wavelength cannot be negative')
         if set_type == 'abs':
@@ -136,7 +166,13 @@ class Spectrometer:
         self._moving = True
 
     def get_wavelength(self):
-        """Get the current central wavelength in the spectrometer"""
+        """Get the current central wavelength in the spectrometer
+
+        Raises
+        ------
+        NotReferencedError: while the grating is being referenced
+        """
+        self._check_referenced()
         if self._moving:
             curr_time = perf_counter()
             self._lambda = \
@@ -147,6 +183,7 @@ class Spectrometer:
     def get_wavelength_axis(self):
         """Get the wavelength axis out of the spectrometer (dependent of the central wavelength (grating position))
         and dispersion of the selected grating"""
+        self._check_referenced()
         if self._grating == 'G300':
             coeff = 0.7
         elif self._grating == 'G1200':
