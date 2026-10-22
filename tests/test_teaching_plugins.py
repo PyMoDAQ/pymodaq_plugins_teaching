@@ -31,6 +31,7 @@ def set_setting(plugin, name, value):
 def monochromator(qapp):
     plugin = make_actuator(DAQ_Move_Monochromator)
     assert plugin.initialized
+    plugin.controller.needs_referencing = True  # the realistic case: the instrument cannot answer while homing
     plugin.controller.homing_time = 0.3  # s, so that the simulated referencing is fast
     set_setting(plugin, 'tau', 20.)  # ms, so that the simulated movement is fast
     yield plugin
@@ -42,6 +43,7 @@ class TestReferencing:
 
     def test_wavelength_is_not_available_while_referencing(self):
         spectrometer = Spectrometer()
+        spectrometer.needs_referencing = True
         spectrometer.find_reference()
         assert not spectrometer.is_referenced
         for call in (spectrometer.get_wavelength, spectrometer.get_wavelength_axis, spectrometer.grab_spectrum,
@@ -51,6 +53,7 @@ class TestReferencing:
 
     def test_wavelength_is_available_after_referencing(self):
         spectrometer = Spectrometer()
+        spectrometer.needs_referencing = True
         spectrometer.homing_time = 0.05
         spectrometer.find_reference()
         sleep(0.1)
