@@ -1,5 +1,5 @@
 [features]  # defines the plugin features contained into this plugin
-instruments = true  # contains instrument plugins
+instruments = true  # true if plugin contains instrument classes (else false, notice the lowercase for toml files)
 extensions = false  # true if plugins contains dashboard extensions
 models = false  # true if plugins contains models of the extensions (PID, optimizers, data mixer, sequencer, ...)
 h5exporters = false  # true if plugin contains custom h5 file exporters
@@ -16,6 +16,8 @@ dependencies = [
     "pymodaq_utils>=5.3.1",
     "pymodaq_gui>=5.3.0",
     "pymodaq_data>=5.3.0",
+    "pymodaq_plugins_mockexamples",  # mock camera used in the module B
+    "laserbeamsize",  # beam analysis used in the module B
 ]
 
 authors = [
