@@ -50,5 +50,7 @@ Viewer1D
 Viewer2D
 ++++++++
 
+* **BeamProfiler**: mock camera of a laser spot (from pymodaq_plugins_mockexamples) that also sends the position and size of the beam
+
 ViewerND
 ++++++++
