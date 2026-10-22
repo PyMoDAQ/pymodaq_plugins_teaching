@@ -54,3 +54,15 @@ Viewer2D
 
 ViewerND
 ++++++++
+
+
+Extensions
+==========
+
+* **Beam Profiler**: Dashboard extension analysing the images of any camera of the experiment (position and size of the beam)
+
+
+Applications
+============
+
+* **beam_profiler_app**: standalone version of the beam profiler on a simulated beam, example of a ``CustomApp``
