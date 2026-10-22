@@ -50,5 +50,19 @@ Viewer1D
 Viewer2D
 ++++++++
 
+* **BeamProfiler**: mock camera of a laser spot (from pymodaq_plugins_mockexamples) that also sends the position and size of the beam
+
 ViewerND
 ++++++++
+
+
+Extensions
+==========
+
+* **Beam Profiler**: Dashboard extension analysing the images of any camera of the experiment (position and size of the beam)
+
+
+Applications
+============
+
+* **beam_profiler_app**: standalone version of the beam profiler on a simulated beam, example of a ``CustomApp``
