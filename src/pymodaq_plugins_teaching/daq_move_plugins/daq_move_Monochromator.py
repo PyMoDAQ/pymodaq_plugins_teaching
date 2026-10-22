@@ -1,4 +1,4 @@
-from time import perf_counter, sleep
+from qtpy import QtCore
 from typing import Union, List, Dict
 
 from pymodaq.control_modules.move_utility_classes import (DAQ_Move_base, comon_parameters_fun,
@@ -8,7 +8,7 @@ from pymodaq_utils.utils import ThreadCommand
 from pymodaq_gui.parameter import Parameter
 from pymodaq_data import Q_
 
-from pymodaq_plugins_teaching.hardware.spectrometer import Spectrometer
+from pymodaq_plugins_teaching.hardware.spectrometer import Spectrometer, NotReferencedError
 
 
 class DAQ_Move_Monochromator(DAQ_Move_base):
@@ -33,7 +33,7 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
     data_actuator_type = DataActuatorType.DataActuator
     ui_type = UiType.NONE
     has_encoder = True
-    HOME_TIMEOUT_S = 30.  # maximum time to wait for the end of the homing movement
+    HOME_POLL_MS = 100  # period at which the end of the referencing is checked
 
     params = [
         {'title': 'Infos:', 'name': 'info', 'type': 'str', 'value': '', 'readonly': True},
@@ -44,15 +44,22 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
 
     def ini_attributes(self):
         self.controller: Spectrometer = None
+        self._home_timer: QtCore.QTimer = None
 
     def get_actuator_value(self) -> DataActuator:
         """Get the current central wavelength, with the scaling applied"""
-        pos = DataActuator(data=self.controller.get_wavelength(), units=self.axis_unit)
+        try:
+            wavelength = self.controller.get_wavelength()
+        except NotReferencedError:  # referencing in progress (move_home): keep the last known position
+            return self.current_value
+        pos = DataActuator(data=wavelength, units=self.axis_unit)
         pos = self.get_position_with_scaling(pos)
         return pos
 
     def close(self):
         """Terminate the communication, only if this plugin owns the controller"""
+        if self._home_timer is not None:
+            self._home_timer.stop()
         if self.is_master and self.controller is not None:
             self.controller.close_communication()
 
@@ -99,16 +106,26 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
         self.controller.set_wavelength(value.value(self.axis_unit), set_type='rel')
 
     def move_home(self):
-        """Go to the reference wavelength, and tell PyMoDAQ when it is reached
+        """Start the referencing of the grating, and tell PyMoDAQ when it is finished
 
         PyMoDAQ does not poll the position after a home move: the plugin has to call `move_done` itself once the
-        homing is finished. Here the wrapper simulates a slow movement, so wait for it (with a timeout).
+        homing is finished. The controller cannot give its position while it is referencing: it raises a
+        `NotReferencedError`. So the referencing is started without blocking, and a QTimer asks the wavelength
+        periodically until the controller answers.
         """
+        if self._home_timer is None:  # created here to live in the thread of the plugin
+            self._home_timer = QtCore.QTimer()
+            self._home_timer.setInterval(self.HOME_POLL_MS)
+            self._home_timer.timeout.connect(self._check_homing_done)
         self.controller.find_reference()
-        t0 = perf_counter()
-        while (abs(self.controller.get_wavelength() - self.controller.target_wavelength) > self.epsilon
-               and perf_counter() - t0 < self.HOME_TIMEOUT_S):
-            sleep(0.01)
+        self._home_timer.start()
+
+    def _check_homing_done(self):
+        try:
+            self.controller.get_wavelength()
+        except NotReferencedError:
+            return  # still referencing, ask again at the next tick
+        self._home_timer.stop()
         self.move_done()
 
     def stop_motion(self):

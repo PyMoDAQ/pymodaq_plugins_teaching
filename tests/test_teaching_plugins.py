@@ -4,12 +4,15 @@ The `Spectrometer` wrapper of this package is already a software simulation of t
 classes are run against it, without hardware and without visible GUI (see test_plugin_behaviour.py for the pattern
 with a fake controller).
 """
+from time import sleep
+
 import numpy as np
 import pytest
 
 from pymodaq.utils.plugin_testing import (make_actuator, make_detector, move_abs_and_wait, move_rel_and_wait,
                                           move_home_and_wait, grab_and_wait)
 
+from pymodaq_plugins_teaching.hardware.spectrometer import Spectrometer, NotReferencedError
 from pymodaq_plugins_teaching.daq_move_plugins.daq_move_Monochromator import DAQ_Move_Monochromator
 from pymodaq_plugins_teaching.daq_viewer_plugins.plugins_0D.daq_0Dviewer_PhotodiodeMonochromator import \
     DAQ_0DViewer_PhotodiodeMonochromator
@@ -28,9 +31,31 @@ def set_setting(plugin, name, value):
 def monochromator(qapp):
     plugin = make_actuator(DAQ_Move_Monochromator)
     assert plugin.initialized
+    plugin.controller.homing_time = 0.3  # s, so that the simulated referencing is fast
     set_setting(plugin, 'tau', 20.)  # ms, so that the simulated movement is fast
     yield plugin
     plugin.close()
+
+
+class TestReferencing:
+    """The wrapper cannot answer while the grating is being referenced, as many real instruments"""
+
+    def test_wavelength_is_not_available_while_referencing(self):
+        spectrometer = Spectrometer()
+        spectrometer.find_reference()
+        assert not spectrometer.is_referenced
+        for call in (spectrometer.get_wavelength, spectrometer.get_wavelength_axis, spectrometer.grab_spectrum,
+                     lambda: spectrometer.set_wavelength(500.)):
+            with pytest.raises(NotReferencedError):
+                call()
+
+    def test_wavelength_is_available_after_referencing(self):
+        spectrometer = Spectrometer()
+        spectrometer.homing_time = 0.05
+        spectrometer.find_reference()
+        sleep(0.1)
+        assert spectrometer.is_referenced
+        assert spectrometer.get_wavelength() == spectrometer.reference_wavelength
 
 
 class TestMonochromator:
@@ -50,6 +75,11 @@ class TestMonochromator:
         move_abs_and_wait(monochromator, 500.)
         pos = move_home_and_wait(monochromator)
         assert pos.value('nm') == pytest.approx(600., abs=0.5)
+
+    def test_position_requests_during_homing_keep_the_last_value(self, monochromator):
+        move_abs_and_wait(monochromator, 500.)
+        monochromator.controller.find_reference()  # referencing in progress, the controller cannot answer
+        assert monochromator.get_actuator_value().value('nm') == pytest.approx(500., abs=0.5)
 
     def test_grating_setting_reaches_the_wrapper(self, monochromator):
         set_setting(monochromator, 'grating', 'G1200')
