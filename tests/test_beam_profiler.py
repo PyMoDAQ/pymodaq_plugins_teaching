@@ -114,3 +114,16 @@ def test_extension_live_mode_chains_the_grabs(extension_with_camera):
     n_after_stop = len(shown)
     _wait_for(lambda: False, timeout=0.3)
     assert len(shown) <= n_after_stop + 1  # at most the grab that was already running
+
+
+def test_actions_use_material_icons(qapp):
+    """The examples only use MaterialIcons (not the old png of the icon library), the ones PyMoDAQ themes"""
+    from pymodaq_gui.resources.material_icons import MaterialIcon
+    dockarea = gutils.DockArea()
+    app = BeamProfilerApp(dockarea)
+    actions = [app.get_action(name) for name in ('simulate',)]
+    with loaded_extension(BeamProfiler) as (dashboard, extension):
+        actions += [extension.get_action(name) for name in ('grab', 'live')]
+        for action in actions:
+            assert isinstance(action.icon_unchecked, MaterialIcon), action.text()
+    dockarea.close()

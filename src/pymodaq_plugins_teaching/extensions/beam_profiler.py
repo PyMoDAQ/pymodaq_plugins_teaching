@@ -55,7 +55,7 @@ class BeamProfiler(CustomExt):
 
     def setup_actions(self):
         self.add_action('grab', 'Grab', 'camera', 'Grab one image from the camera and analyse it')
-        self.add_action('live', 'Live', 'run2', 'Grab and analyse continuously', checkable=True)
+        self.add_action('live', 'Live', 'videocam', 'Grab and analyse continuously', checkable=True)
 
     def connect_things(self):
         self.connect_action('grab', self.grab)
