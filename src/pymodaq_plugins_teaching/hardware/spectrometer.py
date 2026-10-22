@@ -18,9 +18,12 @@ class Spectrometer:
 
     Allows to change the used grating, to move the grating by setting the central wavelength and get the data out of it
 
-    As on many real instruments, the grating position is unknown while it is being referenced (`find_reference`):
-    the position, the movements and the data raise a `NotReferencedError` until `is_referenced` is True again.
+    By default the grating is referenced at once (`find_reference` is instantaneous). Set `needs_referencing` to True
+    for a more realistic instrument: as on many real instruments, the grating position is then unknown while it is
+    being referenced (`find_reference`), and the position, the movements and the data raise a `NotReferencedError`
+    until `is_referenced` is True again.
     """
+    needs_referencing = False  # True: the referencing takes `homing_time` and the instrument cannot answer meanwhile
     gratings = ['G300', 'G1200']
     reference_wavelength = 600.  # nm, position of the reference (limit) of the grating
     homing_time = 1.5  # s, duration of the referencing
@@ -141,10 +144,14 @@ class Spectrometer:
     def find_reference(self):
         """Start the referencing of the grating on its limit, for absolute positioning (non blocking)
 
-        The referencing takes `homing_time`. Until it ends, `is_referenced` is False and the other methods
-        raise a `NotReferencedError`: poll `get_wavelength` (or `is_referenced`) to know when it is finished.
+        Without `needs_referencing` the grating is on its reference at once. Otherwise the referencing takes
+        `homing_time`: until it ends, `is_referenced` is False and the other methods raise a `NotReferencedError`:
+        poll `get_wavelength` (or `is_referenced`) to know when it is finished.
         """
         self._moving = False
+        if not self.needs_referencing:
+            self._lambda = self._target_lambda = self.reference_wavelength
+            return
         self._homing_start = perf_counter()
 
     def set_wavelength(self, value, set_type='abs'):

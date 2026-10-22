@@ -38,6 +38,7 @@ def test_move_abs(monochromator):
 def test_position_requests_during_homing_keep_the_last_value(monochromator):
     """Exercise 2: an instrument that is not referenced cannot answer; the plugin must keep the last known position"""
     move_abs_and_wait(monochromator, 500.)
+    monochromator.controller.needs_referencing = True  # a more realistic instrument: it must be referenced
     monochromator.controller.find_reference()  # the referencing starts: the controller cannot answer any more
     pos = ...  # ask the plugin for its position (hint: get_actuator_value)
     assert ...  # the position is still 500 nm
