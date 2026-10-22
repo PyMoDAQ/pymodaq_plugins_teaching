@@ -23,6 +23,14 @@ class TestExtensionsLoad(PluginExtensionChecks):
 
 
 class TestAnalysis:
+    def test_rotated_beam(self):
+        image = gaussian_beam_image(center=(150., 100.), size=(60., 30.), angle=30.)
+        x, y, d_major, d_minor, phi = beam_properties(image)
+        assert (x, y) == (pytest.approx(150., abs=1.), pytest.approx(100., abs=1.))
+        assert d_major == pytest.approx(60., rel=0.03)
+        assert d_minor == pytest.approx(30., rel=0.03)
+        assert np.rad2deg(phi) == pytest.approx(30., abs=1.)
+
     def test_beam_properties_of_a_simulated_beam(self):
         image = gaussian_beam_image(center=(150., 100.), size=(40., 20.), angle=0.)
         x, y, d_major, d_minor, _ = beam_properties(image)

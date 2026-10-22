@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 
 import laserbeamsize as lbs
+from pymodaq_utils.math_utils import gauss2D
 
 
 def beam_properties(image: np.ndarray) -> Tuple[float, float, float, float, float]:
@@ -24,6 +25,11 @@ def beam_properties(image: np.ndarray) -> Tuple[float, float, float, float, floa
     return float(x), float(y), float(d_major), float(d_minor), float(phi)
 
 
+# gauss1D(x, x0, dx) = exp(-2 ln2 (x - x0)^2 / dx^2) = exp(-2 (x - x0)^2 / w^2) with w = dx / sqrt(ln2) the beam radius at
+# 1/e^2: the diameters D = 2 w given by beam_properties correspond to dx = D sqrt(ln2) / 2
+D_TO_DX = np.sqrt(np.log(2)) / 2
+
+
 def gaussian_beam_image(shape: Tuple[int, int] = (200, 300), center: Tuple[float, float] = (150., 100.),
                         size: Tuple[float, float] = (40., 20.), angle: float = 0., noise: float = 0.,
                         amplitude: float = 1000.) -> np.ndarray:
@@ -38,11 +44,8 @@ def gaussian_beam_image(shape: Tuple[int, int] = (200, 300), center: Tuple[float
     noise: amplitude of the random noise added to the image
     """
     ny, nx = shape
-    x, y = np.meshgrid(np.arange(nx), np.arange(ny))
-    theta = np.deg2rad(angle)
-    xr = (x - center[0]) * np.cos(theta) + (y - center[1]) * np.sin(theta)
-    yr = -(x - center[0]) * np.sin(theta) + (y - center[1]) * np.cos(theta)
-    image = amplitude * np.exp(-2 * ((xr / (size[0] / 2)) ** 2 + (yr / (size[1] / 2)) ** 2))
+    image = amplitude * gauss2D(np.arange(nx), center[0], size[0] * D_TO_DX,
+                                np.arange(ny), center[1], size[1] * D_TO_DX, angle=angle)
     if noise > 0:
         image = image + noise * np.random.rand(ny, nx)
     return image
