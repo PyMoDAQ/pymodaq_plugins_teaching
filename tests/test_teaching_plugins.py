@@ -124,6 +124,35 @@ class TestDetectors:
         camera.close()
 
 
+class TestSignalOptions:
+    """Satellite lines and intensity drift, used by the data analysis exercises"""
+
+    def test_satellite_lines_setting_adds_the_hidden_lines(self, qapp):
+        photodiode = make_detector(DAQ_0DViewer_PhotodiodeMonochromator)
+        controller = photodiode.controller
+        controller.noise = 1e-9  # the noise is not what is tested here
+        position, relative_amplitude = controller.satellite_positions[0]
+        controller.set_wavelength(position)
+        while controller.get_wavelength() != position:
+            sleep(0.05)
+        without = controller.grab_monochromator()[0]
+        set_setting(photodiode, 'satellite_lines', True)
+        with_lines = controller.grab_monochromator()[0]
+        assert with_lines - without == pytest.approx(controller.amplitude * relative_amplitude, rel=1e-3)
+        photodiode.close()
+
+    def test_intensity_drift_follows_the_number_of_measurements(self, qapp):
+        camera = make_detector(DAQ_1DViewer_Spectrometer)
+        controller = camera.controller
+        controller.noise = 1e-9
+        reference = controller.grab_spectrum()
+        set_setting(camera, 'intensity_drift', True)
+        controller._n_measurements = int(controller.drift_period / 4)  # sin = 1 a quarter of a period after 0
+        drifted = controller.grab_spectrum()
+        assert drifted == pytest.approx(reference * (1 + controller.drift_depth), rel=1e-3, abs=1e-6)
+        camera.close()
+
+
 class TestAbsoluteValueSpinbox:
     """The plugin tunes the spinbox of the UI with the `set_allowed_values` thread command"""
 

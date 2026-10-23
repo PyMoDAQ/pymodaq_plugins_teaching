@@ -25,14 +25,19 @@ class DAQ_0DViewer_PhotodiodeMonochromator(DAQ_Viewer_base):
     """
     params = comon_parameters + [
         {'title': 'Infos:', 'name': 'info', 'type': 'str', 'value': '', 'readonly': True},
+        {'title': 'Satellite lines:', 'name': 'satellite_lines', 'type': 'bool', 'value': False,
+         'tip': 'Add weaker lines at hidden wavelengths to the signal'},
+        {'title': 'Intensity drift:', 'name': 'intensity_drift', 'type': 'bool', 'value': False,
+         'tip': 'Slow oscillation of the intensity with the number of measurements'},
     ]
 
     def ini_attributes(self):
         self.controller: Spectrometer = None
 
     def commit_settings(self, param: Parameter):
-        """No setting acts on the wrapper for this detector"""
-        pass
+        """Apply the change of a signal option to the wrapper"""
+        if param.name() in ('satellite_lines', 'intensity_drift'):
+            setattr(self.controller, param.name(), param.value())
 
     def ini_detector(self, controller=None):
         """Detector initialization
@@ -49,6 +54,8 @@ class DAQ_0DViewer_PhotodiodeMonochromator(DAQ_Viewer_base):
             self.controller = controller
             initialized = True
 
+        self.settings.child('satellite_lines').setValue(self.controller.satellite_lines)
+        self.settings.child('intensity_drift').setValue(self.controller.intensity_drift)
         info = self.controller.infos
         self.settings.child('info').setValue(info)
         return info, initialized

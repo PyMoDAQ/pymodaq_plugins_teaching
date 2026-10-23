@@ -29,6 +29,10 @@ class DAQ_1DViewer_Spectrometer(DAQ_Viewer_base):
         {'title': 'Peak width (nm):', 'name': 'peak_width', 'type': 'float', 'value': 2., 'min': 0.1},
         {'title': 'Amplitude:', 'name': 'amplitude', 'type': 'float', 'value': 10., 'min': 0.},
         {'title': 'Noise:', 'name': 'noise', 'type': 'float', 'value': 0.5, 'min': 0.},
+        {'title': 'Satellite lines:', 'name': 'satellite_lines', 'type': 'bool', 'value': False,
+         'tip': 'Add weaker lines at hidden wavelengths to the signal'},
+        {'title': 'Intensity drift:', 'name': 'intensity_drift', 'type': 'bool', 'value': False,
+         'tip': 'Slow oscillation of the intensity with the number of measurements'},
     ]
 
     def ini_attributes(self):
@@ -44,6 +48,8 @@ class DAQ_1DViewer_Spectrometer(DAQ_Viewer_base):
             self.controller.amplitude = param.value()
         elif param.name() == 'noise':
             self.controller.noise = param.value()
+        elif param.name() in ('satellite_lines', 'intensity_drift'):
+            setattr(self.controller, param.name(), param.value())
 
     def ini_detector(self, controller=None):
         """Detector initialization
@@ -64,6 +70,8 @@ class DAQ_1DViewer_Spectrometer(DAQ_Viewer_base):
         self.settings.child('peak_width').setValue(self.controller.width)
         self.settings.child('amplitude').setValue(self.controller.amplitude)
         self.settings.child('noise').setValue(self.controller.noise)
+        self.settings.child('satellite_lines').setValue(self.controller.satellite_lines)
+        self.settings.child('intensity_drift').setValue(self.controller.intensity_drift)
         info = self.controller.infos
         self.settings.child('info').setValue(info)
         return info, initialized
