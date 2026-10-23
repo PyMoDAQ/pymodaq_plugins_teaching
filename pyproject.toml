@@ -2,8 +2,8 @@
 instruments = true  # true if plugin contains instrument classes (else false, notice the lowercase for toml files)
 extensions = false  # true if plugins contains dashboard extensions
 models = false  # true if plugins contains models of the extensions (PID, optimizers, data mixer, sequencer, ...)
-h5exporters = false  # true if plugin contains custom h5 file exporters
-scanners = false  # true if plugin contains custom scan layout (daq_scan extensions)
+h5exporters = true  # true if plugin contains custom h5 file exporters
+scanners = true  # true if plugin contains custom scan layout (daq_scan extensions)
 
 [urls]
 package-url = 'https://github.com/PyMoDAQ/pymodaq_plugins_teaching'
