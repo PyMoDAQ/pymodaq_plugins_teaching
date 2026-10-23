@@ -31,8 +31,9 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
     _controller_units: Union[str, List[str]] = 'nm'
     _epsilons: Union[float, List[float]] = 0.1
     data_actuator_type = DataActuatorType.DataActuator
-    ui_type = UiType.NONE
+    ui_type = UiType.SIMPLE
     has_encoder = True
+    WAVELENGTH_RANGE = (300., 1000.)  # nm, limits of the absolute spinbox of the UI
     HOME_POLL_MS = 100  # period at which the end of the referencing is checked
 
     params = [
@@ -89,6 +90,9 @@ class DAQ_Move_Monochromator(DAQ_Move_base):
         self.settings.child('grating').setValue(self.controller.grating)
         info = self.controller.infos
         self.settings.child('info').setValue(info)
+        # tune the absolute value spinbox of the UI (see DAQMoveUI.set_abs_spinbox_properties)
+        self.emit_status(ThreadCommand('set_allowed_values', dict(decimals=1, minimum=self.WAVELENGTH_RANGE[0],
+                                                                  maximum=self.WAVELENGTH_RANGE[1], step=1.)))
         return info, initialized
 
     def move_abs(self, value: DataActuator):

@@ -135,3 +135,15 @@ def test_actions_use_material_icons(qapp):
         for action in actions:
             assert isinstance(action.icon_unchecked, MaterialIcon), action.text()
     dockarea.close()
+
+
+def test_datamixer_model_computes_the_beam_properties():
+    from pymodaq_plugins_teaching.models.beam_model import DataMixerModelBeam
+    model = DataMixerModelBeam.__new__(DataMixerModelBeam)  # no DataMixer needed for the calculation
+    dte = model.process_dte(_beam_dte(center=(120., 80.), size=(50., 30.)))
+    assert set(dte.get_names()) == {'BeamXY_Camera', 'BeamSize_Camera'}
+    x, y = dte.get_data_from_name('BeamXY_Camera').data
+    d_major, d_minor = dte.get_data_from_name('BeamSize_Camera').data
+    assert (x[0], y[0]) == (pytest.approx(120., abs=1.), pytest.approx(80., abs=1.))
+    assert d_major[0] == pytest.approx(50., rel=0.05)
+    assert d_minor[0] == pytest.approx(30., rel=0.05)

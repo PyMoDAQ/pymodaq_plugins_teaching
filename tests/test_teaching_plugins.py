@@ -122,3 +122,40 @@ class TestDetectors:
         set_setting(camera, 'peak_center', 535.)
         assert camera.controller.data_wavelength == 535.
         camera.close()
+
+
+class TestAbsoluteValueSpinbox:
+    """The plugin tunes the spinbox of the UI with the `set_allowed_values` thread command"""
+
+    def test_plugin_emits_set_allowed_values(self, qapp):
+        commands = []
+        plugin = DAQ_Move_Monochromator()
+        plugin.emit_status = lambda cmd: commands.append(cmd)
+        plugin.ini_stage()
+        allowed = [cmd.attribute for cmd in commands if cmd.command == 'set_allowed_values']
+        assert len(allowed) == 1
+        assert allowed[0]['minimum'] < allowed[0]['maximum']
+        assert {'decimals', 'step'} <= set(allowed[0])
+        plugin.close()
+
+    def test_spinbox_of_the_daq_move_ui_is_updated(self, qtbot):
+        from qtpy import QtWidgets
+        import qt_themes
+        from pymodaq.control_modules.daq_move import DAQ_Move
+        from pymodaq_utils.config import GlobalConfig
+
+        config = GlobalConfig()
+        qt_themes.set_theme(theme=config('gui', 'style', 'theme')[0], style=config('gui', 'style', 'style')[0])
+        widget = QtWidgets.QWidget()
+        qtbot.addWidget(widget)
+        daq_move = DAQ_Move(widget)
+        daq_move.actuator = 'Monochromator'
+        with qtbot.waitSignal(daq_move.init_signal, timeout=10000):
+            daq_move.init_hardware_ui(True)
+
+        low, high = DAQ_Move_Monochromator.WAVELENGTH_RANGE
+        for spinbox in (daq_move.ui.abs_value_sb, daq_move.ui.abs_value_sb_bis, daq_move.ui.abs_value_sb_2):
+            assert tuple(spinbox.opts['bounds']) == (low, high)  # pyqtgraph SpinBox
+            assert spinbox.opts['step'] == 1.
+            assert spinbox.opts['decimals'] == 1
+        daq_move.quit_fun()
