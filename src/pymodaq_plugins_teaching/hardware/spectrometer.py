@@ -28,6 +28,12 @@ class Spectrometer:
     reference_wavelength = 600.  # nm, position of the reference (limit) of the grating
     homing_time = 1.5  # s, duration of the referencing
 
+    satellite_lines = False  # True: weaker lines are added at the hidden positions of `satellite_positions`
+    satellite_positions = ((470., 0.15), (590., 0.10))  # (position in nm, amplitude relative to the main line)
+    intensity_drift = False  # True: the intensity oscillates slowly with the number of measurements
+    drift_depth = 0.2  # relative amplitude of the intensity drift
+    drift_period = 37.3  # period of the intensity drift, in number of measurements
+
     Nx = 256
     infos = 'Spectrometer Controller Wrapper 0.1.0'
 
@@ -52,6 +58,7 @@ class Spectrometer:
         self._lambda0 = 528
 
         self._homing_start = None  # time at which the referencing started, None if not referencing
+        self._n_measurements = 0  # number of calls to the response, drives the intensity drift
 
     def open_communication(self):
         return True
@@ -229,9 +236,16 @@ class Spectrometer:
                 if not isinstance(lambda_axis[0], Number):
                     raise TypeError('lambda_axis should be an iterable of float')
 
-        return (self._amp * gauss1D(lambda_axis, self._lambda0, self._wh * (1 + self._amp/10))
-                * (1+0.5 * np.sin(self._amp/10) * np.sin((lambda_axis-self._lambda0) / (self._wh)))
-                + self._noise * np.random.rand(len(lambda_axis)))
+        width = self._wh * (1 + self._amp/10)
+        response = (self._amp * gauss1D(lambda_axis, self._lambda0, width)
+                    * (1+0.5 * np.sin(self._amp/10) * np.sin((lambda_axis-self._lambda0) / (self._wh))))
+        if self.satellite_lines:
+            for position, relative_amplitude in self.satellite_positions:
+                response = response + self._amp * relative_amplitude * gauss1D(lambda_axis, position, width)
+        if self.intensity_drift:
+            response = response * (1 + self.drift_depth * np.sin(2 * np.pi * self._n_measurements / self.drift_period))
+        self._n_measurements += 1
+        return response + self._noise * np.random.rand(len(lambda_axis))
 
     def _get_data_0D(self, data=None):
         """Get the data at the central wavelength of the spectrometer"""
