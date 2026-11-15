@@ -7,6 +7,7 @@ import numpy as np
 from qtpy import QtWidgets
 
 from pymodaq_gui import utils as gutils
+from pymodaq_gui.utils.shared_ui import SharedUI
 from pymodaq_gui.utils.widgets.window import make_window
 from pymodaq_gui.plotting.data_viewers.viewer2D import Viewer2D
 from pymodaq_gui.utils.widgets.lcd import LCD
@@ -75,8 +76,9 @@ def main():
     app = mkQApp('Beam profiler')
 
     win, area = make_window(title='Beam profiler')
-    BeamProfilerApp(area)
-    win.show()
+    prog = BeamProfilerApp(area)
+    shared_ui = SharedUI(win)  # menus File, View, Tools, Help and the Quit action
+    shared_ui.affect_application(prog)
     app.exec()
 
 
