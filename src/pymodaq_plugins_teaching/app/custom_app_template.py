@@ -7,6 +7,7 @@ state managers, modules manager...).
 from qtpy import QtWidgets
 
 from pymodaq_gui import utils as gutils
+from pymodaq_gui.utils.widgets.window import make_window
 from pymodaq_utils.config import GlobalConfig
 from pymodaq_utils.logger import set_logger, get_module_name
 
@@ -61,7 +62,7 @@ class CustomAppTemplate(gutils.CustomApp):
         --------
         >>> self.add_menu('file', 'File', parent_menu=menubar)  # here
         >>> self.add_toolbar('main', 'Main toolbar', self.mainwindow)  # here
-        >>> self.add_action('save', 'Save', 'SaveAs', "Save current data", menu='file', toolbar='main')  # in setup_actions
+        >>> self.add_action('save', 'Save', 'save_as', "Save current data", menu='file', toolbar='main')  # in setup_actions
 
         See Also
         --------
@@ -75,11 +76,11 @@ class CustomAppTemplate(gutils.CustomApp):
 
         Examples
         --------
-        >>> self.add_action('quit', 'Quit', 'close2', "Quit program")
+        >>> self.add_action('quit', 'Quit', 'close', "Quit program")
         >>> self.add_action('grab', 'Grab', 'camera', "Grab from camera", checkable=True)
-        >>> self.add_action('load', 'Load', 'Open', "Load target file (.h5, .png, .jpg) or data from camera"
+        >>> self.add_action('load', 'Load', 'file_open', "Load target file (.h5, .png, .jpg) or data from camera"
             , checkable=False)
-        >>> self.add_action('save', 'Save', 'SaveAs', "Save current data", checkable=False)
+        >>> self.add_action('save', 'Save', 'save_as', "Save current data", checkable=False)
 
         See Also
         --------
@@ -114,14 +115,12 @@ def main():
     from pymodaq_gui.qt_utils import mkQApp
     app = mkQApp('CustomApp')
 
-    mainwindow = QtWidgets.QMainWindow()
-    dockarea = gutils.DockArea()
-    mainwindow.setCentralWidget(dockarea)
+    win, area = make_window(title='CustomApp')
 
     # todo: change the name here to be the same as your app class
-    prog = CustomAppTemplate(dockarea)
+    prog = CustomAppTemplate(area)
 
-    mainwindow.show()
+    win.show()
 
     app.exec()
 
