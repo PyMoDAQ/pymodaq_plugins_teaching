@@ -8,6 +8,7 @@ import numpy as np
 from qtpy import QtWidgets
 
 from pymodaq_gui import utils as gutils
+from pymodaq_gui.utils.shared_ui import SharedUI
 from pymodaq_gui.utils.widgets.window import make_window
 from pymodaq_gui.plotting.data_viewers.viewer1D import Viewer1D
 from pymodaq_data.data import DataRaw, Axis
@@ -94,8 +95,9 @@ def main():
     app = mkQApp('Harmonics FFT')
 
     win, area = make_window(title='Harmonics FFT')
-    HarmonicsFFTApp(area)
-    win.show()
+    prog = HarmonicsFFTApp(area)
+    shared_ui = SharedUI(win)  # menus File, View, Tools, Help and the Quit action
+    shared_ui.affect_application(prog)
     app.exec()
 
 
