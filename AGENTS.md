@@ -190,9 +190,11 @@ documentation page "CustomApp and CustomExt" (`docs/src/developer_folder/custom_
 
 ## 5. Standalone apps (`CustomApp`)
 
-Only when no instrument is needed. Same (non-deprecated) lifecycle as above, `parent` is a `DockArea` or `QMainWindow`, and
-`main()` creates the app with `mkQApp` and the window with its `DockArea` with `make_window`
-(`pymodaq_gui.utils.widgets.window`). If instruments become necessary, move the logic to a `CustomExt`.
+Only when no instrument is needed. Same (non-deprecated) lifecycle as above, `parent` is a `DockArea` or `QMainWindow`.
+`main()` creates the app with `mkQApp`, the window and its `DockArea` with `make_window`
+(`pymodaq_gui.utils.widgets.window`), then wraps the window in a `SharedUI` (`pymodaq_gui.utils.shared_ui`):
+`SharedUI(win).affect_application(prog)`. The window has no close button: the Quit action of the `SharedUI` closes
+the app (extensions get theirs from `create_extension`). If instruments become necessary, move the logic to a `CustomExt`.
 
 ## 6. Models of the extensions (`models/`)
 
