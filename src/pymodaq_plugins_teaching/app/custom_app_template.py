@@ -7,6 +7,7 @@ state managers, modules manager...).
 from qtpy import QtWidgets
 
 from pymodaq_gui import utils as gutils
+from pymodaq_gui.utils.shared_ui import SharedUI
 from pymodaq_gui.utils.widgets.window import make_window
 from pymodaq_utils.config import GlobalConfig
 from pymodaq_utils.logger import set_logger, get_module_name
@@ -119,8 +120,8 @@ def main():
 
     # todo: change the name here to be the same as your app class
     prog = CustomAppTemplate(area)
-
-    win.show()
+    shared_ui = SharedUI(win)  # menus File, View, Tools, Help and the Quit action
+    shared_ui.affect_application(prog)
 
     app.exec()
 
