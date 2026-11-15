@@ -7,6 +7,7 @@ import numpy as np
 from qtpy import QtWidgets
 
 from pymodaq_gui import utils as gutils
+from pymodaq_gui.utils.widgets.window import make_window
 from pymodaq_gui.plotting.data_viewers.viewer2D import Viewer2D
 from pymodaq_gui.utils.widgets.lcd import LCD
 from pymodaq_data.data import DataRaw, Axis
@@ -73,11 +74,9 @@ def main():
     from pymodaq_gui.qt_utils import mkQApp
     app = mkQApp('Beam profiler')
 
-    mainwindow = QtWidgets.QMainWindow()
-    dockarea = gutils.DockArea()
-    mainwindow.setCentralWidget(dockarea)
-    BeamProfilerApp(dockarea)
-    mainwindow.show()
+    win, area = make_window(title='Beam profiler')
+    BeamProfilerApp(area)
+    win.show()
     app.exec()
 
 
