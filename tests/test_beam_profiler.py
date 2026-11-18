@@ -12,7 +12,7 @@ from pymodaq_gui import utils as gutils
 
 from pymodaq_plugins_teaching.hardware.beam import beam_properties, gaussian_beam_image
 from pymodaq_plugins_teaching.daq_viewer_plugins.plugins_2D.daq_2Dviewer_BeamProfiler import \
-    DAQ_2DViewer_BeamProfiler
+    CAMERA_DATA_NAME, DAQ_2DViewer_BeamProfiler
 from pymodaq_plugins_teaching.extensions.beam_profiler import BeamProfiler
 from pymodaq_plugins_teaching.app.beam_profiler_app import BeamProfilerApp
 
@@ -45,7 +45,7 @@ def test_plugin_sends_the_beam_properties(qapp):
     assert camera.initialized
     dte = grab_and_wait(camera)
     names = dte.get_names()
-    assert {'BSCamera', 'BeamSizeDXDY', 'BeamSizeXY'} <= set(names)
+    assert {CAMERA_DATA_NAME, 'BeamSizeDXDY', 'BeamSizeXY'} <= set(names)
     d_major, d_minor = dte.get_data_from_name('BeamSizeDXDY').data
     assert d_major[0] >= d_minor[0] > 0
     camera.close()
