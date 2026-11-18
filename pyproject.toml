@@ -18,6 +18,7 @@ dependencies = [
     "pymodaq_data>=5.3.0",
     "pymodaq_plugins_mockexamples",  # mock camera used in the module B
     "laserbeamsize",  # beam analysis used in the module B
+    "matplotlib",  # plots of the notebooks of the module C
 ]
 
 authors = [
